@@ -5,17 +5,17 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
       {/* Navigation */}
-      <nav className="flex items-center justify-between p-6 max-w-7xl mx-auto border-b border-slate-200">
+      <nav className="flex items-center justify-between flex-wrap gap-4 p-4 md:p-6 max-w-7xl mx-auto border-b border-slate-200">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-sky-500 text-white flex items-center justify-center font-bold text-xl">
             T
           </div>
           <span className="font-bold text-xl tracking-tight">TestPortal</span>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <Link href="/pricing" className="text-sm font-medium text-slate-600 hover:text-slate-900">Pricing</Link>
-          <Link href="/login" className="text-sm font-medium text-slate-600 hover:text-slate-900">Login</Link>
-          <Link href="/signup" className="text-sm font-medium bg-sky-500 text-white px-4 py-2 rounded-lg hover:bg-sky-600 transition-colors">
+          <Link href="/sign-in" className="text-sm font-medium text-slate-600 hover:text-slate-900">Login</Link>
+          <Link href="/sign-up" className="text-sm font-medium bg-sky-500 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg hover:bg-sky-600 transition-colors">
             Get Started
           </Link>
         </div>
@@ -34,7 +34,7 @@ export default function Home() {
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link href="/signup" className="flex items-center gap-2 bg-sky-500 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-sky-600 hover:-translate-y-1 transition-all shadow-lg shadow-sky-500/25">
+          <Link href="/sign-up" className="flex items-center gap-2 bg-sky-500 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-sky-600 hover:-translate-y-1 transition-all shadow-lg shadow-sky-500/25">
             Create an Account <ArrowRight className="w-5 h-5" />
           </Link>
           <Link href="/pricing" className="flex items-center gap-2 bg-white text-slate-700 border border-slate-200 px-8 py-4 rounded-xl font-bold text-lg hover:bg-slate-50 transition-all">

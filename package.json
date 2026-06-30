@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.5.9",
     "@hookform/resolvers": "^5.4.0",
     "@sanity/image-url": "^2.1.1",
     "bcryptjs": "^3.0.3",
@@ -16,13 +17,16 @@
     "framer-motion": "^12.40.0",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.21.0",
+    "mammoth": "^1.12.0",
     "next": "16.2.9",
     "next-sanity": "^13.1.1",
+    "nodemailer": "^9.0.1",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-hook-form": "^7.80.0",
     "sanity": "^6.1.0",
     "styled-components": "^6.4.2",
+    "svix": "^1.96.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -30,6 +34,7 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
+    "@types/nodemailer": "^8.0.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

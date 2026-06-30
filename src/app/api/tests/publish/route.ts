@@ -1,31 +1,33 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
+import { auth, currentUser } from '@clerk/nextjs/server'
 import { client } from '@/sanity/client'
-import { verifyToken } from '@/lib/jwt'
+import { getOrCreateSanityUser } from '@/lib/user'
 
 export async function POST(request: Request) {
     try {
-        const cookieStore = await cookies()
-        const token = cookieStore.get('token')?.value
-
-        if (!token) {
+        const { userId } = await auth()
+        if (!userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const decoded: any = verifyToken(token)
-        if (!decoded || !decoded.sub) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-        }
+        const clerkUser = await currentUser()
+        const email = clerkUser?.emailAddresses[0]?.emailAddress ?? ''
+        const name = clerkUser?.firstName
+            ? `${clerkUser.firstName} ${clerkUser.lastName ?? ''}`.trim()
+            : email
+
+        const sanityUser = await getOrCreateSanityUser(userId, email, name)
+        const teacherId = sanityUser._id
 
         const body = await request.json()
-        const { title, duration, shuffleQuestions, shuffleOptions, showResultsToStudents, questions } = body
+        const { title, duration, shuffleQuestions, shuffleOptions, showResultsToStudents, antiCheatEnabled, questions } = body
 
         if (!title || !questions || questions.length === 0) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
         }
 
         // Verify Subscription
-        const sub = await client.fetch(`*[_type == "subscription" && teacher._ref == $userId] | order(_createdAt desc)[0]`, { userId: decoded.sub })
+        const sub = await client.fetch(`*[_type == "subscription" && teacher._ref == $teacherId] | order(_createdAt desc)[0]`, { teacherId })
         if (!sub || sub.status !== 'Approved') {
             return NextResponse.json({ error: 'Account not approved for creating tests. Please verify your payment.' }, { status: 403 })
         }
@@ -57,7 +59,7 @@ export async function POST(request: Request) {
             title: title,
             teacher: {
                 _type: 'reference',
-                _ref: decoded.sub
+                _ref: teacherId
             },
             durationOptions: {
                 durationMinutes: duration
@@ -67,6 +69,7 @@ export async function POST(request: Request) {
                 shuffleOptions: shuffleOptions || false,
                 oneQuestionAtATime: true,
                 showResultsToStudents: showResultsToStudents !== undefined ? showResultsToStudents : true,
+                antiCheatEnabled: antiCheatEnabled !== undefined ? antiCheatEnabled : true,
                 defaultMarks: 1
             },
             sections: [

@@ -4,6 +4,13 @@ export const userType = {
     type: 'document',
     fields: [
         {
+            name: 'clerkId',
+            title: 'Clerk User ID',
+            type: 'string',
+            description: 'The unique ID from Clerk authentication — do not edit manually.',
+            readOnly: true,
+        },
+        {
             name: 'name',
             title: 'Full Name',
             type: 'string',
@@ -12,12 +19,6 @@ export const userType = {
             name: 'email',
             title: 'Email',
             type: 'string',
-        },
-        {
-            name: 'password',
-            title: 'Hashed Password',
-            type: 'string',
-            hidden: true, // Hide from Studio UI
         },
         {
             name: 'role',

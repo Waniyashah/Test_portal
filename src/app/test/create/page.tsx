@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Plus, Trash, Settings, CheckCircle, ArrowLeft, Save } from 'lucide-react'
 
+
 export default function CreateTestPage() {
     const router = useRouter()
     const [title, setTitle] = useState('Untitled Test')
@@ -12,6 +13,7 @@ export default function CreateTestPage() {
     const [shuffleQuestions, setShuffleQuestions] = useState(false)
     const [shuffleOptions, setShuffleOptions] = useState(false)
     const [showResultsToStudents, setShowResultsToStudents] = useState(true)
+    const [antiCheatEnabled, setAntiCheatEnabled] = useState(true)
     const [questions, setQuestions] = useState([
         { id: Date.now().toString(), text: '', marks: 1, options: [{ text: '', isCorrect: true }, { text: '', isCorrect: false }] }
     ])
@@ -56,6 +58,8 @@ export default function CreateTestPage() {
         setQuestions(questions.map(q => q.id === id ? { ...q, marks } : q))
     }
 
+
+
     const handleOptionChange = (questionId: string, optionIndex: number, text: string) => {
         setQuestions(questions.map(q => {
             if (q.id === questionId) {
@@ -94,6 +98,7 @@ export default function CreateTestPage() {
                     shuffleQuestions,
                     shuffleOptions,
                     showResultsToStudents,
+                    antiCheatEnabled,
                     questions
                 })
             })
@@ -116,8 +121,8 @@ export default function CreateTestPage() {
 
     return (
         <div className="min-h-screen bg-slate-50 pb-20 font-sans text-slate-900">
-            <header className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm flex items-center justify-between px-6 py-4">
-                <div className="flex items-center gap-4">
+            <header className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-4 sm:px-6 py-4">
+                <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
                     <Link href="/dashboard" className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500">
                         <ArrowLeft className="w-5 h-5" />
                     </Link>
@@ -125,14 +130,14 @@ export default function CreateTestPage() {
                         type="text"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        className="text-xl font-bold bg-transparent border-b-2 border-transparent hover:border-slate-200 focus:border-sky-500 focus:outline-none px-2 py-1 transition-colors"
+                        className="text-lg sm:text-xl font-bold bg-transparent border-b-2 border-transparent hover:border-slate-200 focus:border-sky-500 focus:outline-none px-2 py-1 transition-colors w-full max-w-[200px] sm:max-w-xs"
                     />
                 </div>
-                <div className="flex gap-3">
-                    <button className="flex items-center gap-2 text-slate-600 hover:text-slate-900 font-medium px-4 py-2 rounded-lg transition-colors border border-slate-200">
+                <div className="flex gap-2 sm:gap-3 w-full sm:w-auto justify-end">
+                    <button className="flex items-center gap-2 text-slate-600 hover:text-slate-900 font-medium px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-colors border border-slate-200 text-sm">
                         <Settings className="w-4 h-4" /> Settings
                     </button>
-                    <button onClick={handlePublish} disabled={isPublishing} className="flex items-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-6 py-2 rounded-lg font-bold transition-all shadow-md shadow-sky-500/20 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button onClick={handlePublish} disabled={isPublishing} className="flex items-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 sm:px-6 sm:py-2 rounded-lg font-bold transition-all shadow-md shadow-sky-500/20 disabled:opacity-50 disabled:cursor-not-allowed text-sm">
                         <Save className="w-4 h-4" /> {isPublishing ? 'Publishing...' : 'Publish Exam'}
                     </button>
                 </div>
@@ -140,9 +145,9 @@ export default function CreateTestPage() {
 
             <main className="max-w-3xl mx-auto mt-8 px-4 space-y-6">
                 {/* Settings Card */}
-                <div className="bg-white border-t-8 border-t-sky-500 rounded-2xl p-8 shadow-sm">
-                    <h2 className="text-2xl font-bold mb-4">Exam Configuration</h2>
-                    <div className="grid grid-cols-2 gap-6">
+                <div className="bg-white border-t-8 border-t-sky-500 rounded-2xl p-6 sm:p-8 shadow-sm">
+                    <h2 className="text-xl sm:text-2xl font-bold mb-4">Exam Configuration</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-2">Duration (Minutes)</label>
                             <input
@@ -182,6 +187,16 @@ export default function CreateTestPage() {
                                 />
                                 <span className="font-medium text-slate-700">Show Results Immediately</span>
                             </label>
+
+                            <label className="flex items-center gap-3 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={antiCheatEnabled}
+                                    onChange={(e) => setAntiCheatEnabled(e.target.checked)}
+                                    className="w-5 h-5 rounded text-sky-500 focus:ring-sky-500 cursor-pointer"
+                                />
+                                <span className="font-medium text-slate-700">Enable Anti-Cheat Features</span>
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -199,6 +214,12 @@ export default function CreateTestPage() {
                                     placeholder="Type your question here"
                                     value={q.text}
                                     onChange={(e) => handleQuestionTextChange(q.id, e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault()
+                                            // Optional: could focus next field
+                                        }
+                                    }}
                                     className="flex-1 text-lg font-medium bg-slate-50 hover:bg-slate-100 focus:bg-white border-b-2 border-slate-200 focus:border-sky-500 px-4 py-3 rounded-t-lg transition-colors focus:outline-none"
                                 />
                             </div>
@@ -219,7 +240,7 @@ export default function CreateTestPage() {
                                 <div key={oIndex} className="flex items-center gap-3">
                                     <button
                                         onClick={() => setCorrectOption(q.id, oIndex)}
-                                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${opt.isCorrect ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 hover:border-slate-400'}`}
+                                        className={`w-6 h-6 shrink-0 rounded-full border-2 flex items-center justify-center transition-colors ${opt.isCorrect ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 hover:border-slate-400'}`}
                                         title="Mark as correct answer"
                                     >
                                         {opt.isCorrect && <CheckCircle className="w-4 h-4" />}
@@ -229,6 +250,14 @@ export default function CreateTestPage() {
                                         placeholder={`Option ${oIndex + 1}`}
                                         value={opt.text}
                                         onChange={(e) => handleOptionChange(q.id, oIndex, e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault()
+                                                if (oIndex === q.options.length - 1) {
+                                                    addOption(q.id)
+                                                }
+                                            }
+                                        }}
                                         className={`flex-1 px-4 py-2 border rounded-xl focus:outline-none focus:ring-1 transition-all ${opt.isCorrect ? 'border-emerald-200 bg-emerald-50 focus:border-emerald-500 focus:ring-emerald-500' : 'border-slate-200 focus:border-sky-500 focus:ring-sky-500'}`}
                                     />
                                     {q.options.length > 2 && (
@@ -265,7 +294,7 @@ export default function CreateTestPage() {
                 <div className="flex justify-center pt-4 pb-12">
                     <button
                         onClick={addQuestion}
-                        className="flex items-center gap-2 bg-white text-slate-700 border border-slate-300 px-8 py-3 rounded-full font-bold hover:shadow-md hover:border-sky-300 hover:text-sky-600 transition-all shadow-sm"
+                        className="flex items-center gap-2 bg-white text-slate-700 border border-slate-300 px-8 py-3 rounded-full font-bold hover:shadow-md hover:border-sky-300 hover:text-sky-600 transition-all shadow-sm w-full sm:w-auto justify-center"
                     >
                         <Plus className="w-5 h-5" /> Add New Question
                     </button>

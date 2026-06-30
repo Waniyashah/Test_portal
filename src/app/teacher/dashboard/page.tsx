@@ -1,8 +1,17 @@
 import React from 'react'
 import Link from 'next/link'
 import { Plus, Users, LayoutDashboard, Settings, FileText, BarChart } from 'lucide-react'
+import { auth } from '@clerk/nextjs/server'
+import { redirect } from 'next/navigation'
+import { UserButton } from '@clerk/nextjs'
 
-export default function TeacherDashboard() {
+export default async function TeacherDashboard() {
+    const { userId } = await auth();
+
+    if (!userId) {
+        redirect('/sign-in');
+    }
+
     return (
         <div className="min-h-screen bg-slate-50 flex">
             {/* Sidebar */}
@@ -39,9 +48,7 @@ export default function TeacherDashboard() {
                 <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 lg:px-10">
                     <h1 className="text-xl font-bold text-slate-800">Dashboard Overview</h1>
                     <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-slate-200 border-2 border-white shadow-sm overflow-hidden flex items-center justify-center font-bold text-slate-500">
-                            JD
-                        </div>
+                        <UserButton />
                     </div>
                 </header>
 

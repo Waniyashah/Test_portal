@@ -1,24 +1,23 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
+import { auth, currentUser } from '@clerk/nextjs/server'
 import { client } from '@/sanity/client'
-import { verifyToken } from '@/lib/jwt'
+import { getOrCreateSanityUser } from '@/lib/user'
 
 export async function POST(request: Request) {
     try {
-        const cookieStore = await cookies()
-        const token = cookieStore.get('token')?.value
-        let teacherId = null
-
-        if (token) {
-            const decoded: any = verifyToken(token)
-            if (decoded && decoded.sub) {
-                teacherId = decoded.sub
-            }
-        }
-
-        if (!teacherId) {
+        const { userId } = await auth()
+        if (!userId) {
             return NextResponse.json({ error: 'Unauthorized: Please log in to subscribe' }, { status: 401 })
         }
+
+        const clerkUser = await currentUser()
+        const email = clerkUser?.emailAddresses[0]?.emailAddress ?? ''
+        const name = clerkUser?.firstName
+            ? `${clerkUser.firstName} ${clerkUser.lastName ?? ''}`.trim()
+            : email
+
+        const sanityUser = await getOrCreateSanityUser(userId, email, name)
+        const teacherId = sanityUser._id
 
         const formData = await request.formData()
         const planName = formData.get('planName') as string

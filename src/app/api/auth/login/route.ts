@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { client } from '@/sanity/client'
 import bcrypt from 'bcryptjs'
-import { signToken } from '@/lib/jwt'
+import { sendOTP } from '@/lib/sendEmail'
 
 export async function POST(request: Request) {
     try {
@@ -26,24 +26,23 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
         }
 
-        // Generate JWT
-        const token = signToken({ sub: user._id, role: user.role, email: user.email, name: user.name })
+        // Generate a fresh 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString()
 
-        const response = NextResponse.json({
-            message: 'Login successful',
-            user: { id: user._id, name: user.name, role: user.role }
+        // Save OTP to DB
+        await client
+            .patch(user._id)
+            .set({ loginOtp: otp })
+            .commit()
+
+        // Send OTP via email
+        await sendOTP(email, otp)
+
+        return NextResponse.json({
+            message: 'OTP sent to your email',
+            requireOtp: true,
+            email: user.email
         })
-
-        // Set HTTPOnly Cookie
-        response.cookies.set('token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            maxAge: 86400, // 1 day
-            path: '/',
-        })
-
-        return response
     } catch (error) {
         console.error('Login error:', error)
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

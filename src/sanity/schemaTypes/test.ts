@@ -33,6 +33,7 @@ export const testType = {
                 { name: 'shuffleOptions', title: 'Shuffle Options', type: 'boolean', initialValue: false },
                 { name: 'oneQuestionAtATime', title: 'One Question At a Time', type: 'boolean', initialValue: false },
                 { name: 'showResultsToStudents', title: 'Show Results Status', type: 'boolean', initialValue: true },
+                { name: 'antiCheatEnabled', title: 'Anti-Cheat Enabled', type: 'boolean', initialValue: true },
                 { name: 'defaultMarks', title: 'Default Marks Per Question', type: 'number', initialValue: 1 }
             ]
         },

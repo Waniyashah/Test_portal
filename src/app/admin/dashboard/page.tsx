@@ -1,27 +1,26 @@
 import React from 'react'
 import Link from 'next/link'
-import { revalidatePath } from 'next/cache'
 import { client } from '@/sanity/client'
 import { Shield, Activity, Users, CreditCard, Check, X, FileText, Trash2 } from 'lucide-react'
-import { cookies } from 'next/headers'
-import { verifyToken } from '@/lib/jwt'
+import { auth, currentUser } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
+import { UserButton } from '@clerk/nextjs'
+import { approveSubscription, rejectSubscription, deleteSubscription } from './actions'
 
-// Check Admin Access
+// Check Admin Access using Clerk
 async function checkAdminAccess() {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('token')?.value
-    if (!token) return false
-    try {
-        const decoded: any = verifyToken(token)
-        const adminEmailsEnv = process.env.ADMIN_EMAILS || process.env.ADMIN_EMAIL || "";
-        const allowedAdmins = adminEmailsEnv.split(',').map(e => e.trim().toLowerCase());
+    const { userId } = await auth()
+    if (!userId) return { isLoggedIn: false, isAdmin: false }
 
-        if (decoded && decoded.email && allowedAdmins.includes(decoded.email.toLowerCase())) {
-            return true
-        }
-    } catch (e) { }
-    return false
+    const user = await currentUser()
+    const userEmail = user?.primaryEmailAddress?.emailAddress?.toLowerCase() || ''
+    const adminEmailsEnv = process.env.ADMIN_EMAILS || process.env.ADMIN_EMAIL || ''
+    const allowedAdmins = adminEmailsEnv.split(',').map(e => e.trim().toLowerCase())
+
+    if (allowedAdmins.includes(userEmail)) {
+        return { isLoggedIn: true, isAdmin: true }
+    }
+    return { isLoggedIn: true, isAdmin: false }
 }
 
 // Fetch real data from Sanity via GROQ
@@ -48,9 +47,15 @@ async function fetchStats() {
     return { usersCount, pendingCount, activeSubs }
 }
 
+
+
 export default async function AdminDashboard() {
-    const isAdmin = await checkAdminAccess()
-    if (!isAdmin) {
+    const authStatus = await checkAdminAccess()
+
+    if (!authStatus.isLoggedIn) {
+        redirect('/login') // Ask for login if not logged in
+    }
+    if (!authStatus.isAdmin) {
         redirect('/') // Redirect non-admins to homepage
     }
 
@@ -83,9 +88,7 @@ export default async function AdminDashboard() {
                     <h1 className="text-xl font-bold text-white">User Subscriptions Review</h1>
                     <div className="flex items-center gap-4">
                         <div className="text-sm">Admin Access</div>
-                        <button className="text-sm font-medium bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg transition-colors">
-                            Logout
-                        </button>
+                        <UserButton />
                     </div>
                 </header>
 
@@ -164,29 +167,17 @@ export default async function AdminDashboard() {
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
                                                     <div className="flex items-center justify-end gap-2">
-                                                        <form action={async () => {
-                                                            'use server';
-                                                            await client.patch(sub._id).set({ status: 'Approved' }).commit()
-                                                            revalidatePath('/admin/dashboard')
-                                                        }}>
+                                                        <form action={approveSubscription.bind(null, sub._id)}>
                                                             <button type="submit" className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white flex items-center justify-center transition-colors shadow-sm" title="Approve Plan">
                                                                 <Check className="w-4 h-4" />
                                                             </button>
                                                         </form>
-                                                        <form action={async () => {
-                                                            'use server';
-                                                            await client.patch(sub._id).set({ status: 'Rejected' }).commit()
-                                                            revalidatePath('/admin/dashboard')
-                                                        }}>
+                                                        <form action={rejectSubscription.bind(null, sub._id)}>
                                                             <button type="submit" className="w-8 h-8 rounded-full bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition-colors shadow-sm" title="Reject Plan">
                                                                 <X className="w-4 h-4" />
                                                             </button>
                                                         </form>
-                                                        <form action={async () => {
-                                                            'use server';
-                                                            await client.delete(sub._id)
-                                                            revalidatePath('/admin/dashboard')
-                                                        }}>
+                                                        <form action={deleteSubscription.bind(null, sub._id)}>
                                                             <button type="submit" className="w-8 h-8 rounded-full bg-slate-500/10 text-slate-400 hover:bg-slate-700 hover:text-white flex items-center justify-center transition-colors shadow-sm" title="Delete Plan">
                                                                 <Trash2 className="w-4 h-4" />
                                                             </button>
@@ -205,3 +196,5 @@ export default async function AdminDashboard() {
         </div>
     )
 }
+
+export const dynamic = 'force-dynamic';
